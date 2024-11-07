@@ -69,6 +69,5 @@ func (s *PublisherService) Delete(id uint) error {
 	if id <= 0 {
 		return exception.ErrDataNotFound
 	}
-
 	return s.repo.Delete(id)
 }

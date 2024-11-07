@@ -106,3 +106,18 @@ func (r *PersonRepository) Update(params *dto.PersonUpdateReq) error {
 
 	return tx.Error
 }
+
+func (r *PersonRepository) Delete(id uint) error {
+	ctx, cancelFunc := storage.NewDBContext()
+	defer cancelFunc()
+	var person dao.Person
+	if err := r.db.WithContext(ctx).Where("id = ?", id).First(&person).Error; err != nil {
+		return err // Return the error if the author is not found or other error occurs
+	}
+
+	if err := r.db.WithContext(ctx).Where("id = ?", id).Delete(&dao.Person{}).Error; err != nil {
+		return err // Return the error if delete fails
+	}
+
+	return nil // Return nil if deletion is successful
+}
