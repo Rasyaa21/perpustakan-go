@@ -11,18 +11,17 @@ import (
 	"gorm.io/gorm"
 )
 
-type AuthorRepository struct {
+type BookRepository struct {
 	db *gorm.DB
 }
 
-func NewAuthorRepository(db *gorm.DB) *AuthorRepository {
-	return &AuthorRepository{db: db}
+func NewRepository(db *gorm.DB) *BookRepository {
+	return &BookRepository{db: db}
 }
 
-func (r *AuthorRepository) Create(newItem *dao.Author) error {
+func (r *BookRepository) Create(newItem *dao.Book) error {
 	ctx, cancelFunc := storage.NewDBContext()
 	defer cancelFunc()
-
 	tx := r.db.WithContext(ctx).Create(&newItem)
 	if tx.Error != nil {
 		return tx.Error
@@ -30,15 +29,15 @@ func (r *AuthorRepository) Create(newItem *dao.Author) error {
 	return nil
 }
 
-func (r *AuthorRepository) GetList(params *dto.Filter) ([]dao.Author, error) {
+func (r *BookRepository) GetList(params *dto.Filter) ([]dao.Book, error) {
 	ctx, cancelFunc := storage.NewDBContext()
 	defer cancelFunc()
 
-	var items []dao.Author
+	var items []dao.Book
 	tx := r.db.WithContext(ctx)
 	if params.Keyword != "" {
 		q := fmt.Sprintln("%%%s%%", params.Keyword)
-		tx = tx.Where("Author LIKE ?", q)
+		tx = tx.Where("Book LIKE ?", q)
 	}
 	if params.Start >= 0 {
 		tx.Offset(params.Start)
@@ -53,11 +52,11 @@ func (r *AuthorRepository) GetList(params *dto.Filter) ([]dao.Author, error) {
 	return items, nil
 }
 
-func (r *AuthorRepository) GetAuthorByID(id uint) (*dao.Author, error) {
+func (r *BookRepository) GetBookByID(id uint) (*dao.Book, error) {
 	ctx, cancelFunc := storage.NewDBContext()
 	defer cancelFunc()
 
-	var item dao.Author
+	var item dao.Book
 	tx := r.db.WithContext(ctx).First(&item, id)
 	if tx.Error != nil {
 		if errors.Is(tx.Error, gorm.ErrRecordNotFound) {
@@ -67,27 +66,26 @@ func (r *AuthorRepository) GetAuthorByID(id uint) (*dao.Author, error) {
 	return &item, nil
 }
 
-func (r *AuthorRepository) Update(author *dao.Author) error {
+func (r *BookRepository) Update(author *dao.Book) error {
 	ctx, cancelFunc := storage.NewDBContext()
 	defer cancelFunc()
-	tx := r.db.WithContext(ctx).Model(&dao.Author{}).Where("id = ?", author.ID).Updates(map[string]interface{}{
-		"fullname": author.Fullname,
-		"gender":   author.Gender,
+
+	tx := r.db.WithContext(ctx).Model(&dao.Book{}).Where("id = ?", author.ID).Updates(map[string]interface{}{
+		"Title":  author.Title,
+		"gender": author.Subtitle,
 	})
 	return tx.Error
 }
 
-func (r *AuthorRepository) Delete(id uint) error {
+func (r *BookRepository) Delete(id uint) error {
 	ctx, cancelFunc := storage.NewDBContext()
 	defer cancelFunc()
-	var author dao.Author
-	if err := r.db.WithContext(ctx).Where("id = ?", id).First(&author).Error; err != nil {
+	var book dao.Book
+	if err := r.db.WithContext(ctx).Where("id = ?", id).First(&book).Error; err != nil {
 		return err
 	}
-
-	if err := r.db.WithContext(ctx).Where("id = ?", id).Delete(&dao.Author{}).Error; err != nil {
+	if err := r.db.WithContext(ctx).Where("id = ?", id).Delete(&dao.Book{}).Error; err != nil {
 		return err
 	}
-
 	return nil
 }

@@ -12,31 +12,31 @@ import (
 	"github.com/gin-gonic/gin"
 )
 
-type AuthorHandler struct {
+type BookHandler struct {
 	hr      *server.Handler
-	service *service.AuthorService
+	service *service.BookService
 }
 
-func NewAuthorHandler(handler *server.Handler, authorService *service.AuthorService) *AuthorHandler {
-	return &AuthorHandler{hr: handler, service: authorService}
+func NewBookHandler(handler *server.Handler, bookService *service.BookService) *BookHandler {
+	return &BookHandler{hr: handler, service: bookService}
 }
 
-func (h *AuthorHandler) Route(app *gin.Engine) {
-	grp := app.Group(server.RootAuthor)
-	grp.GET("", h.getList)
+func (h *BookHandler) Route(app *gin.Engine) {
+	grp := app.Group(server.RootBook)
 	grp.GET("/:id", h.getByID)
+	grp.GET("/", h.getList)
 	grp.POST("/", h.hr.AuthAccess(), h.create)
 	grp.DELETE("/:id", h.hr.AuthAccess(), h.delete)
 	grp.PUT("/:id", h.hr.AuthAccess(), h.update)
 }
 
-func (h *AuthorHandler) create(c *gin.Context) {
-	var req dto.AuthorCreate
+func (h *BookHandler) create(c *gin.Context) {
+	var req dto.BookCreateReq
 	if err := c.ShouldBindJSON(&req); err != nil {
 		h.hr.BindingError(err)
 		return
 	}
-	err := h.service.CreateAuthor(&req)
+	err := h.service.CreateBook(&req)
 	if err != nil {
 		h.hr.ErrorInternalServer(c, err)
 		return
@@ -47,7 +47,7 @@ func (h *AuthorHandler) create(c *gin.Context) {
 	})
 }
 
-func (h *AuthorHandler) getList(c *gin.Context) {
+func (h *BookHandler) getList(c *gin.Context) {
 	var req dto.Filter
 	if err := c.ShouldBindQuery(&req); err != nil {
 		c.JSON(h.hr.BindingError(err))
@@ -64,14 +64,14 @@ func (h *AuthorHandler) getList(c *gin.Context) {
 		return
 	}
 
-	c.JSON(http.StatusOK, dto.SuccessResponse[[]dto.AuthorDetailRes]{
+	c.JSON(http.StatusOK, dto.SuccessResponse[[]dto.BookDetailRes]{
 		Success: true,
 		Message: "Daftar Penerbit",
 		Data:    data,
 	})
 }
 
-func (h *AuthorHandler) getByID(c *gin.Context) {
+func (h *BookHandler) getByID(c *gin.Context) {
 	idStr := c.Param("id")
 	id, err := strconv.ParseUint(idStr, 10, 64)
 	if err != nil {
@@ -79,32 +79,32 @@ func (h *AuthorHandler) getByID(c *gin.Context) {
 		return
 	}
 
-	author, err := h.service.GetAuthorByID(uint(id))
+	book, err := h.service.GetBookByID(uint(id))
 	if err != nil {
 		c.JSON(http.StatusNotFound, h.hr.ErrorResponse(err.Error()))
 		return
 	}
 
-	c.JSON(http.StatusOK, dto.SuccessResponse[dto.AuthorDetailRes]{
+	c.JSON(http.StatusOK, dto.SuccessResponse[dto.BookDetailRes]{
 		Success: true,
-		Message: "Author details",
-		Data:    author,
+		Message: "book details",
+		Data:    book,
 	})
 }
 
-func (h *AuthorHandler) update(c *gin.Context) {
+func (h *BookHandler) update(c *gin.Context) {
 	idStr := c.Param("id")
 	id, err := strconv.ParseUint(idStr, 10, 64)
 	if err != nil {
 		c.JSON(http.StatusBadRequest, gin.H{"message": "Invalid ID"})
 		return
 	}
-	var req dto.AuthorUpdateReq
+	var req dto.UpdateBook
 	if err := c.ShouldBindJSON(&req); err != nil {
 		c.JSON(http.StatusBadRequest, gin.H{"message": "Invalid data"})
 		return
 	}
-	err = h.service.UpdateAuthor(uint(id), &req)
+	err = h.service.UpdateBook(uint(id), &req)
 	if err != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{"message": "Failed to update author"})
 		return
@@ -112,15 +112,14 @@ func (h *AuthorHandler) update(c *gin.Context) {
 	c.JSON(http.StatusOK, gin.H{"message": "Author updated successfully"})
 }
 
-func (h *AuthorHandler) delete(c *gin.Context) {
+func (h *BookHandler) delete(c *gin.Context) {
 	idStr := c.Param("id")
 	id, err := strconv.ParseUint(idStr, 10, 64)
 	if err != nil {
 		c.JSON(http.StatusBadRequest, gin.H{"message": "Invalid ID"})
 		return
 	}
-
-	err = h.service.DeleteAuthor(uint(id))
+	err = h.service.DeleteBook(uint(id))
 	if err != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{"message": "Failed to delete author"})
 		return

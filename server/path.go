@@ -7,6 +7,8 @@ const (
 	RootPerson    = rootPath + "/persons"
 	RootPublisher = rootPath + "/publishers"
 	RootAuthor    = rootPath + "/authors"
+	RootBook      = rootPath + "/books"
+	RootBorrow    = rootPath + "/borrows"
 
 	PathLogin = "/login"
 )
